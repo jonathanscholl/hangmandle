@@ -8,8 +8,10 @@ export default function Hangman() {
   const [wrongGuesses, setWrongGuesses] = useState(0);
 
   const handleGuess = (letter) => {
+
+    setGuessedLetters([...guessedLetters, letter]);
     if (word.includes(letter)) {
-      setGuessedLetters([...guessedLetters, letter]);
+        return
     } else {
       setWrongGuesses(wrongGuesses + 1);
     }
