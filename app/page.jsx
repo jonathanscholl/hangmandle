@@ -8,12 +8,11 @@ export default function Hangman() {
   const [wrongGuesses, setWrongGuesses] = useState(0);
 
   const handleGuess = (letter) => {
-
-    setGuessedLetters([...guessedLetters, letter]);
-    if (word.includes(letter)) {
-        return
-    } else {
-      setWrongGuesses(wrongGuesses + 1);
+    if (!guessedLetters.includes(letter)) {
+      setGuessedLetters([...guessedLetters, letter]);
+      if (!word.includes(letter)) {
+        setWrongGuesses(wrongGuesses + 1);
+      }
     }
   };
 
@@ -41,13 +40,12 @@ export default function Hangman() {
       </div>
       
       {/* Letter buttons */}
-      <div className="grid grid-cols-7 gap-2">
-        {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => (
+      <div className="grid grid-cols-10 pt-10 gap-5">
+        {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("" ).map((letter) => (
           <button
             key={letter}
-            className="btn btn-second btn-outline"
-            onClick={() => handleGuess(letter)}
-            disabled={guessedLetters.includes(letter)}
+            className={`btn btn-outline ${guessedLetters.includes(letter) ? (word.includes(letter) ? "btn-success" : "btn-error") : "btn-primary"} ${guessedLetters.includes(letter) ? "pointer-events-none opacity-50" : ""}`}
+            onClick={() => !guessedLetters.includes(letter) && handleGuess(letter)}
           >
             {letter}
           </button>
