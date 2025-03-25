@@ -1,21 +1,29 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { getDailyWord } from "./words";
+import { getRandomWord } from "../words";
 import Link from "next/link";
-import HangmanSVG from "./components/HangmanSVG";
-import ThemeToggle from "./components/ThemeToggle";
+import HangmanSVG from "../components/HangmanSVG";
+import ThemeToggle from "../components/ThemeToggle";
 
-export default function Hangman() {
+export default function UnlimitedHangman() {
   const [word, setWord] = useState("");
   const [guessedLetters, setGuessedLetters] = useState([]);
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
 
+  const startNewGame = () => {
+    setWord(getRandomWord());
+    setGuessedLetters([]);
+    setWrongGuesses(0);
+    setGameOver(false);
+    setGameWon(false);
+  };
+
   useEffect(() => {
-    // Initialize the game with today's word
-    setWord(getDailyWord());
+    // Initialize the game with a random word
+    startNewGame();
   }, []);
 
   // Check for win condition whenever guessedLetters changes
@@ -36,18 +44,8 @@ export default function Hangman() {
       setGuessedLetters([...guessedLetters, letter]);
       if (!word.includes(letter)) {
         setWrongGuesses(wrongGuesses + 1);
-        if (wrongGuesses + 1 >= 6) {
-          setGameOver(true);
-        }
       }
     }
-  };
-
-  const resetGame = () => {
-    setGuessedLetters([]);
-    setWrongGuesses(0);
-    setGameOver(false);
-    setGameWon(false);
   };
 
   // Show game status message
@@ -60,9 +58,9 @@ export default function Hangman() {
   return (
     <div className="flex flex-col items-center gap-4 p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Hangmandle</h1>
-        <Link href="/unlimited" className="btn btn-sm btn-outline">
-          Unlimited Mode
+        <h1 className="text-2xl sm:text-3xl font-bold">Hangmandle Unlimited</h1>
+        <Link href="/" className="btn btn-sm btn-outline">
+          Daily Mode
         </Link>
         <ThemeToggle />
       </div>
@@ -70,7 +68,7 @@ export default function Hangman() {
       {/* Hangman SVG */}
       <div className="flex flex-col items-center gap-2">
         <HangmanSVG wrongGuesses={wrongGuesses} />
-        <span className="text-lg sm:text-xl">{wrongGuesses} / 6</span>
+        <span className="text-lg sm:text-xl">Wrong: {wrongGuesses}</span>
       </div>
       
       {/* Word display */}
@@ -102,8 +100,8 @@ export default function Hangman() {
         ))}
       </div>
       
-      {/* Reset button */}
-      <button className="btn btn-primary btn-sm sm:btn-md mt-4" onClick={resetGame}>Reset</button>
+      {/* New Game button */}
+      <button className="btn btn-primary btn-sm sm:btn-md mt-4" onClick={startNewGame}>New Game</button>
     </div>
   );
-}
+} 
