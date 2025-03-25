@@ -5,6 +5,7 @@ import { getDailyWord } from "./words";
 import Link from "next/link";
 import HangmanSVG from "./components/HangmanSVG";
 import ThemeToggle from "./components/ThemeToggle";
+import StatsModal from "./components/StatsModal";
 
 export default function Hangman() {
   const [word, setWord] = useState("");
@@ -12,10 +13,36 @@ export default function Hangman() {
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [hasPlayedToday, setHasPlayedToday] = useState(false);
+  const [isViewingCompleted, setIsViewingCompleted] = useState(false);
 
   useEffect(() => {
     // Initialize the game with today's word
-    setWord(getDailyWord());
+    const todayWord = getDailyWord();
+    setWord(todayWord);
+
+    // Check if user has already played today
+    const savedStats = localStorage.getItem('hangmanStats');
+    if (savedStats) {
+      const stats = JSON.parse(savedStats);
+      const today = new Date().toISOString().split('T')[0];
+      if (stats.lastPlayed === today) {
+        setHasPlayedToday(true);
+        setGameOver(true);
+        setShowStats(true);
+        // If they won, show the word
+        if (stats.gamesWon > 0) {
+          setGuessedLetters(todayWord.split(''));
+          setGameWon(true);
+        } else {
+          // If they lost, show the word and all wrong guesses
+          setGuessedLetters(todayWord.split(''));
+          setWrongGuesses(6);
+        }
+        setIsViewingCompleted(true);
+      }
+    }
   }, []);
 
   // Check for win condition whenever guessedLetters changes
@@ -27,32 +54,44 @@ export default function Hangman() {
       if (allGuessed) {
         setGameWon(true);
         setGameOver(true);
+        setShowStats(true);
       }
     }
   }, [guessedLetters, word, gameOver]);
 
   const handleGuess = (letter) => {
-    if (!guessedLetters.includes(letter) && !gameOver) {
+    if (!guessedLetters.includes(letter) && !gameOver && !hasPlayedToday) {
       setGuessedLetters([...guessedLetters, letter]);
       if (!word.includes(letter)) {
         setWrongGuesses(wrongGuesses + 1);
         if (wrongGuesses + 1 >= 6) {
           setGameOver(true);
+          setShowStats(true);
         }
       }
     }
   };
 
   const resetGame = () => {
-    setGuessedLetters([]);
-    setWrongGuesses(0);
-    setGameOver(false);
-    setGameWon(false);
+    if (!hasPlayedToday) {
+      setGuessedLetters([]);
+      setWrongGuesses(0);
+      setGameOver(false);
+      setGameWon(false);
+      setShowStats(false);
+    }
   };
 
   // Show game status message
   const getStatusMessage = () => {
     if (!gameOver) return null;
+    if (hasPlayedToday) {
+      if (gameWon) {
+        return "Congratulations! You won today's game!";
+      } else {
+        return "Game Over! You lost today's game.";
+      }
+    }
     if (gameWon) return "Congratulations! You won!";
     return "Game Over! The word was: " + word;
   };
@@ -94,7 +133,7 @@ export default function Hangman() {
         {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("" ).map((letter) => (
           <button
             key={letter}
-            className={`btn btn-sm sm:btn-md btn-outline ${guessedLetters.includes(letter) ? (word.includes(letter) ? "btn-success" : "btn-error") : "btn-primary"} ${guessedLetters.includes(letter) || gameOver ? "pointer-events-none opacity-50" : ""}`}
+            className={`btn btn-sm sm:btn-md btn-outline ${guessedLetters.includes(letter) ? (word.includes(letter) ? "btn-success" : "btn-error") : "btn-primary"} ${guessedLetters.includes(letter) || gameOver || hasPlayedToday ? "pointer-events-none opacity-50" : ""}`}
             onClick={() => handleGuess(letter)}
           >
             {letter}
@@ -103,7 +142,23 @@ export default function Hangman() {
       </div>
       
       {/* Reset button */}
-      <button className="btn btn-primary btn-sm sm:btn-md mt-4" onClick={resetGame}>Reset</button>
+      {!isViewingCompleted && (
+        <button 
+          className="btn btn-primary btn-sm sm:btn-md mt-4" 
+          onClick={resetGame}
+          disabled={hasPlayedToday}
+        >
+          Reset
+        </button>
+      )}
+
+      {/* Stats Modal */}
+      <StatsModal 
+        isOpen={showStats}
+        onClose={() => setShowStats(false)}
+        gameWon={gameWon}
+        word={word}
+      />
     </div>
   );
 }
