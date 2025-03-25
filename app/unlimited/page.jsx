@@ -44,6 +44,9 @@ export default function UnlimitedHangman() {
       setGuessedLetters([...guessedLetters, letter]);
       if (!word.includes(letter)) {
         setWrongGuesses(wrongGuesses + 1);
+        if (wrongGuesses + 1 >= 6) {
+          setGameOver(true);
+        }
       }
     }
   };
@@ -68,13 +71,18 @@ export default function UnlimitedHangman() {
       {/* Hangman SVG */}
       <div className="flex flex-col items-center gap-2">
         <HangmanSVG wrongGuesses={wrongGuesses} />
-        <span className="text-lg sm:text-xl">Wrong: {wrongGuesses}</span>
+        <span className="text-lg sm:text-xl">{wrongGuesses} / 6</span>
       </div>
       
       {/* Word display */}
       <div className="text-xl sm:text-2xl font-mono">
         {word.split("").map((letter, index) => (
-          <span key={index} className="mx-0.5 sm:mx-1 border-b-2 w-4 sm:w-6 inline-block text-center">
+          <span 
+            key={index} 
+            className={`mx-0.5 sm:mx-1 border-b-2 w-4 sm:w-6 inline-block text-center ${
+              gameOver && guessedLetters.includes(letter) && !word.includes(letter) ? 'text-error' : ''
+            }`}
+          >
             {guessedLetters.includes(letter) ? letter : "_"}
           </span>
         ))}

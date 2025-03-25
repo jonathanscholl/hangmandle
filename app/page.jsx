@@ -31,14 +31,27 @@ export default function Hangman() {
         setHasPlayedToday(true);
         setGameOver(true);
         setShowStats(true);
-        // If they won, show the word
+        // If they won, show the word and wrong guesses
         if (stats.gamesWon > 0) {
           setGuessedLetters(todayWord.split(''));
           setGameWon(true);
+          setWrongGuesses(stats.lastWrongGuesses || 0);
+          // Add wrong letters to guessedLetters to show them in red
+          const wrongLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            .split('')
+            .filter(letter => !todayWord.includes(letter))
+            .slice(0, stats.lastWrongGuesses || 0);
+          setGuessedLetters([...todayWord.split(''), ...wrongLetters]);
         } else {
           // If they lost, show the word and all wrong guesses
           setGuessedLetters(todayWord.split(''));
           setWrongGuesses(6);
+          // Add wrong letters to guessedLetters to show them in red
+          const wrongLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            .split('')
+            .filter(letter => !todayWord.includes(letter))
+            .slice(0, 6);
+          setGuessedLetters([...todayWord.split(''), ...wrongLetters]);
         }
         setIsViewingCompleted(true);
       }
@@ -87,13 +100,18 @@ export default function Hangman() {
     if (!gameOver) return null;
     if (hasPlayedToday) {
       if (gameWon) {
-        return "Congratulations! You won today's game!";
+        return `Congratulations! You won today's game with ${wrongGuesses} wrong guesses!`;
       } else {
         return "Game Over! You lost today's game.";
       }
     }
     if (gameWon) return "Congratulations! You won!";
     return "Game Over! The word was: " + word;
+  };
+
+  // Get the wrong letters that were guessed
+  const getWrongLetters = () => {
+    return guessedLetters.filter(letter => !word.includes(letter));
   };
 
   return (
@@ -115,7 +133,12 @@ export default function Hangman() {
       {/* Word display */}
       <div className="text-xl sm:text-2xl font-mono">
         {word.split("").map((letter, index) => (
-          <span key={index} className="mx-0.5 sm:mx-1 border-b-2 w-4 sm:w-6 inline-block text-center">
+          <span 
+            key={index} 
+            className={`mx-0.5 sm:mx-1 border-b-2 w-4 sm:w-6 inline-block text-center ${
+              isViewingCompleted && guessedLetters.includes(letter) && !word.includes(letter) ? 'text-error' : ''
+            }`}
+          >
             {guessedLetters.includes(letter) ? letter : "_"}
           </span>
         ))}
@@ -158,6 +181,7 @@ export default function Hangman() {
         onClose={() => setShowStats(false)}
         gameWon={gameWon}
         word={word}
+        wrongGuesses={wrongGuesses}
       />
     </div>
   );
